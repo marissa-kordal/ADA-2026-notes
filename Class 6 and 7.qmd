@@ -1,0 +1,177 @@
+
+
+
+```{r}
+library(tidyverse)
+library(readr)
+
+f <- "https://raw.githubusercontent.com/difiore/ada-datasets/main/KamilarAndCooperData.csv"
+
+d <- read_csv(f, col_names = TRUE)
+
+attach(d) ##any named variable in the data set so that I don't have to refer to the data set its coming from
+
+mean(Brain_Size_Female_Mean, na.rm = TRUE) #65.23588
+
+detach(d)
+
+mean(Brain_Size_Female_Mean, na.rm = TRUE) #throws and error
+
+#does not recommend because it can get confusing if you dont clean up your environment
+
+with(d, mean(Brain_Size_Female_Mean, na.rm = TRUE))
+summary(d) #give a five number summary and the number of na's in each numerical variable
+
+install.packages("skimr")
+library(skimr)
+
+head(skim(d))
+tail(skim(d))
+
+```
+
+```{r}
+##boxplots
+
+#using base R
+
+boxplot(log(d$Body_mass_female_mean)) #by default plotted vertically 
+
+stripchart(log(d$Body_mass_female_mean))
+
+stripchart(log(d$Body_mass_female_mean),
+           method = "jitter",
+           col = "blue",
+           vertical = TRUE,
+           add = TRUE)
+
+
+boxplot(data = d, log(Body_mass_female_mean) ~ Family)
+stripchart(log(d$Body_mass_female_mean) ~ d$Family,
+           method = "jitter",
+           col = "blue",
+           vertical = TRUE,
+           add = TRUE)
+
+##GGPLOT2!!
+
+library(ggplot2)
+
+p<-ggplot(data = d,
+       aes(x = Family, y = log(Body_mass_female_mean))
+       ) +
+  geom_boxplot(na.rm = TRUE) ##na.rm removes na's from the data 
+p
+
+p2<- p + geom_jitter(color = "blue")
+
+
+library(fishualize)
+```
+
+```{r}
+##scatter plot base R
+
+plot(x = log(d$Body_mass_female_mean),
+     y = log(d$Brain_Size_Female_Mean))
+
+p <- ggplot(data = d, aes(x= log(Body_mass_female_mean, y = log(Brain_Size_Female_Mean)))) +
+  geom_point(na.rm = TRUE)
+
+```
+
+```{r}
+#class 7 feb 6th 26
+#need to remove na's and be specific about how you are removing NAs from your data set, package called janitor, lets you clean up dataset, exclude rows that have an NA from certain columns. 
+#important in regression analysis 
+
+p <- ggplot(data = d, 
+            aes(x= log(Body_mass_female_mean), 
+                       y = log(Brain_Size_Female_Mean))) +
+  geom_point(aes(color= factor(Family)), na.rm = TRUE) +
+  theme_minimal() +
+  geom_smooth(method = "lm", na.rm = TRUE)
+p
+
+## can add a regression line on top of the points using geom_smooth and method "lm"
+## would get that if you ran a linear regression on stuff
+
+##now talking about data wrangling
+
+#tidy data gives rise to tidyverse
+#organize data in a consistent way, each variable has its own column and each observation or case in its own row. 
+
+#try to store data in tidy format 
+
+#functions that are built into packages. 
+
+#filter(.data ), want to only take the cases that match what you want
+#select(data), extract columns as a table. 
+#arrange() order rows by values of a column or columns, use desc() to order from high to low 
+#group_by() select all of the cases that pertain to all of the unique columns, can calculate the mean body size by ect 
+
+#summarize() aggregate data across a set a values 
+
+#mutate() creates a new column of data that joins column together 
+library(dplyr)
+s <- filter(d, Family == "Hominidae" & Mass_Dimorphism > 2)
+
+head(s)
+
+s <- select(d, Family, Genus, Body_mass_male_mean)
+
+dim(s)
+
+##pipe operator %>%
+
+s <- d %>%
+  select(Family, Genus, Body_mass_male_mean)%>%
+  filter(Family == "Hominidae")
+
+s
+
+##sorting 
+
+s<- d%>%
+  arrange(Family, Genus, desc(Body_mass_male_mean))
+
+
+s<- d%>%
+  group_by(Family)%>%
+  summarise(avgF = mean(Body_mass_female_mean, na.rm=TRUE))
+
+s
+
+#adding a new column 
+
+d <- d %>%
+  mutate(Taxonomy = paste0(Family, "-", Genus, "-", Species))
+d
+
+##reording columns 
+
+#relocate to front 
+
+d <- d%>%
+  relocate(Taxonomy)
+
+#relocate using select()
+
+d <- d%>%
+  select(Taxonomy, everything())
+
+d
+
+
+```
+
+```{r}
+movies <- read_csv("~/Grad School Things/Classes/Classes Spring 26/applied_data_analysis/IMDB-movies.csv")
+install.packages("stringr")
+view(movies)
+
+comedy<- movies%>%
+  mutate(Comedy = if_else(str_detect(genres, "Comedy"), TRUE, FALSE))
+
+comedy
+```
