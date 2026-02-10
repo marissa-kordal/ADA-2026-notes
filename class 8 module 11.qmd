@@ -1,0 +1,115 @@
+---
+title: "Module 11"
+format: html
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+
+```{r}
+
+#module 11 objective 
+#The objective of this module to become familiar with how some additional basic programming concepts are implemented in R.
+
+install.packages("sjmisc")
+
+library(tidyverse)
+
+
+```
+
+You can add options to executable code like this 
+
+```{r}
+##class 2-10-26  flow control and looping
+
+#last week we loaded in
+
+movies <- read_csv("IMDB-movies.csv")
+
+comedy<- movies%>%
+  mutate(Comedy = if_else(str_detect(genres, "Comedy"), TRUE, FALSE))
+
+head(comedy)
+
+##grepl takes the string you want to detect first then the varibale
+##str_detect takes variable first and then the string of characters you want to detect
+
+comedy<- movies%>%
+  mutate(Comedy = if_else(str_detect(genres, "Comedy"), TRUE, FALSE))
+
+##how many comedy movies 
+
+nm<- comedy%>%
+  summarize(count = n(), ## take a count across the dataset 
+            comedies = sum(Comedy, na.rm = TRUE)) # sum the number of comedy in the dataset
+
+##conditional statements 
+#if (test) {do this} else {do that}
+#ifelse(test, do this if true, do this if false)
+#if_else(test, do this if true, do this if false)
+#case_when () in a column of data want to create a new variable dependent on another variable 
+
+##coding challenge
+
+#add a new variable for the ranking of a movie 
+
+ranking<-movies%>%
+  mutate(ranking = (case_when(
+    averageRating < 3.3 ~ "low",
+    averageRating < 6.7 ~ "med",
+    averageRating <= 10.0 ~ "high"
+  ))) %>%
+  group_by(ranking)%>%
+  summarise(count = n(), avg_runtime = mean(runtimeMinutes, na.rm = TRUE))
+  
+#Loops
+
+# for loops and while loops
+#for loops define a set of indicies we are going to go over more than once
+
+#for (i in 1:10) {   example
+#  print(i)
+#} 
+
+#while (condition) {
+#  
+#}
+
+#write code to loop through all the rows in the dataset and print out the cumulative running time of all the movies (hint.. need to consider NAs)
+#whats a much faster way to calculate this?
+
+cruntime <- 0
+for (i in 1:nrow(movies)) {
+  if (!is.na(movies[i, ]$runtimeMinutes)) {
+    cruntime<- cruntime + movies[i, ]$runtimeMinutes }
+}
+
+cruntime
+
+##joins and functions 
+#joining two types of datasets together 
+#inner join, needs to have a column that is the same a new 
+
+papers<- read.csv("papers.csv")
+
+author <- tibble(
+  fullName = c("Abbott, David"),
+  lastName = "Abbott",
+  firstName = "David"
+)
+
+#inner join on papers
+
+inner_join(papers, author,
+           by = c("First.Author.Last.Name" = "lastName",
+                  "First.Author.First.Name" = "firstName"))
+
+##fuzzy joins between datasets 
+
+```
+
