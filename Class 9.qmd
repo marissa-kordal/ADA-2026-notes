@@ -1,0 +1,62 @@
+---
+title: "Class 9"
+format: html
+date: 02-12-26
+---
+
+
+```{r}
+##joins
+
+papers <- read_csv("~/Grad School Things/Classes/Classes Spring 26/applied_data_analysis/papers.csv")
+
+author <- tibble(
+  fullName = c("Abbott, David"),
+  lastName = "Abbott",
+  firstName = "David"
+)
+
+#inner join on papers
+
+inner_join(papers, author,
+           by = c("First Author Last Name" = "lastName",
+                  "First Author First Name" = "firstName"))
+#fuzzy join for if you don't have a perfect match
+
+papers<- papers%>%
+  separate_wider_delim(
+    cols = Author,
+    delim = ";",
+    names = c("First Author", "A2", "A3", "A4"),
+    too_few = "align_start",
+    too_many = "drop"
+  ) %>%
+  mutate(A2 = str_trim(`A2`, "both"),
+         A3 = str_trim(`A3`, "both"),
+         A4 = str_trim(`A3`, "both"))
+
+devtools::install_github("dgrtwo/fuzzyjoin")
+
+devtools::install_github("dgrtwo/fuzzyjoin")
+
+update.packages("cli")
+remove.packages("cli")
+
+install.packages("cli")
+
+##bioinformatics lots of useful packages not through CRAN. should definitely install R tools or figure out how to deal with this. 
+```
+
+
+
+```{r}
+## practice data wrangling challenge 
+library(readr)
+gps <- read_csv("sample_gps_data.csv")
+beh <- read_csv("sample_behavioral_data.csv")
+
+
+
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).

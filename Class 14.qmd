@@ -1,0 +1,360 @@
+---
+title: "Class 14"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+### load in required packages
+```{r}
+#| output: false
+library(tidyverse)
+library(infer)
+```
+
+Load in the dataset.
+```{r}
+d <- read_csv("https://raw.githubusercontent.com/difiore/ada-datasets/refs/heads/main/tbs-2006-2008-ranges.csv")
+
+d <- d %>%
+  select(sex, kernel95)
+```
+
+# Permutation Testing
+
+Now, let's program our own alternative to this standard parametric t-test using permutation methods.
+
+1. Define test statistic
+2. Define null hypothesis
+3. Define alternative hypothesis
+4. Generate a permutation distribution
+5. Determine the p-value
+
+#### Generating a permutation distribution
+```{r}
+# actual difference between means
+obs_diff <- d %>%
+  summarise(diff = mean(kernel95[sex == "M"]) -
+              mean(kernel95[sex == "F"])) %>%
+  pull(diff) # pull function pulls out a vector
+
+# permuted difference between means
+# using for() loop
+n_perm <- 10000
+perm_diff <- vector() # dummy vector to hold results
+for (i in 1:n_perm) {
+  d %>%
+    mutate(sex = sample(sex)) %>% # keeps the same set of values but reorganizes them // breaks any correlation between sex and home range
+    summarise(diff = mean(kernel95[sex == "M"]) -
+                mean(kernel95[sex == "F"])) %>%
+    pull(diff) -> perm_diff[[i]]
+}
+
+histogram(perm_diff) 
+```
+Histogram is centered on zero - **this is our permutation null distribution.** We basically said that if sex is NOT correlated with home range, the difference between the means of home range between males and females should be zero.
+
+Since our actual difference between means is outside of the permutation difference between means, it means that the alternative hypothesis is true -- *there is a difference between the means of home range between males and females.*
+
+```{r}
+# or an alternative using do()*
+perm_diff <- {do(n_perm) *
+    d %>%
+    mutate(sex = sample(sex)) %>%
+    summarize(diff = mean(kernel95[sex == "M"]) -
+                mean(kernel95[sex == "F"]))
+  } %>%
+  pull(diff)
+
+histogram(perm_diff)
+```
+
+#### Determining the p-value
+```{r}
+p_val <- sum(abs(perm_diff) >=
+               abs(obs_diff))/length(perm_diff) # takes the sum of the TRUEs (if perm is greater than obs) and divide by number of permutations
+p_val
+
+# or this way
+p_val <- mean(abs(perm_diff) >= abs(obs_diff))
+p_val
+```
+The p-value is *super* small, so reject null hypothesis.
+
+## Using the {infer} package
+Does everything we did above with a few functions.
+
+```{r}
+# We first use the function specify() to indicate the variables we are interested in.
+d <- d %>%
+  specify(formula = kernel95 ~ sex)
+
+# The function hypothesize() is then used to declare the null hypothesis we wish to test.
+d <- d %>%
+  hypothesize(null = "independence")
+
+# Then use generate() to generate replicates of "permutated" data under the assumption that the null hypothesis is true.
+perm <- d %>%
+  generate(reps = 1000, type = "permute")
+
+# Next, use calculate() to calculate summary statistics of interest for each replicate
+perm <- perm %>%
+  calculate(stat = "diff in means", order = c("M", "F")) # for each replicate, what is the difference between male and female means
+
+# We can then use visualize() to examine the null distribution
+visualize(perm, bins = 20)
+
+# We can also use visualize() to plot our observed test statistic relative to the permutation distribution
+# First, we calculate the observed test statistic
+obs_diff <- d %>%
+  specify(kernel95 ~ sex) %>%
+  calculate(stat = "diff in means", order = c("M", "F"))
+
+# Then...
+visualize(perm, bins = 20) +
+  shade_p_value(obs_stat = obs_diff, direction = "both")
+
+# to get the p-value...
+get_p_value(perm, obs_diff, direction = "both")
+```
+
+#### Advantages of permutation tests 
+Permutation tests are "distribution free" -- they don't make any assumptions about distributions
+
+
+
+# Introduction to Regression
+
+### load required packages 
+```{r}
+library(broom)
+library(tidyverse)
+library(manipulate)
+library(patchwork)
+library(infer)
+```
+
+### Types of regressions
+* Simple linear regression
+* Multiple linear regression
+* ANOVA - one or more categorical predictors
+* ANCOVA - a combination of categorical and continuous predictors
+* "Generalized" linear regression - allows for binary, categorical, count variables as outcomes
+
+### Before modeling, start with exploratory data analysis
+* Univariate summary statistics (e.g., skim())
+* Bivariate summary statistics
+  + *Covariance* expresses how much two numeric variables "change together" and whether that change is + or -
+    - Product of the deviations of each variable from their respective means divided by (sample size - 1)
+  + *Correlation coefficient* is a *standardized* form of the covariance that summarizes both the strength and direction of the relationship
+    - Divide covariance by the product of the standard deviations of the two variables
+    
+### Programming Exercise
+
+1. Load in dataset
+```{r}
+d <- read_csv("https://raw.githubusercontent.com/difiore/ada-datasets/refs/heads/main/zombies.csv", col_names =TRUE)
+```
+
+2. Plot the relationship between zombie apocalypse survivor weight and height.
+```{r}
+plot_height_weight <- d %>%
+  ggplot(aes(x = weight, y = height)) + 
+  geom_point()
+plot_height_weight
+```
+
+3. Calculate cov by hand and using cov()
+```{r}
+cov <- sum(((d$height-mean(d$height)) * (d$weight-mean(d$weight)))/(nrow(d)-1))
+cov
+
+cov(d$height, d$weight)
+```
+
+4. Calculate correlation by hand and using cor()
+```{r}
+cor <- cov/(sd(d$height)*sd(d$weight))
+cor
+
+cor(d$height, d$weight)
+```
+
+### More on Regression
+
+Typical equation is Y = mx + b
+
+One common criterion is **ordinary least squares**
+* We want to find coefficients that minimize the residuals (i.e., the difference between observed and expected y values)
+
+
+```{r}
+
+##^from megan notes last thursday that I missed. 
+
+##starting today 
+
+install.packages("infer")
+install.packages("manipulate")
+
+
+##how to visualize line of best fit linear regressions 
+```
+
+
+1. load in dataset
+
+```{r}
+d <- read_csv("https://raw.githubusercontent.com/difiore/ada-datasets/refs/heads/main/zombies.csv", col_names =TRUE)
+
+head(d)
+names(d)
+
+plot(d$weight, d$height)
+
+temp <- d %>% mutate(
+  centered_height = height - mean(height),
+  centered_weight = weight - mean(weight))
+
+slope.test <- function(beta1, data) {
+  g <- ggplot(data = data, aes(x = centered_weight, y = centered_height))
+  g <- g + geom_point()
+  g <- g + geom_abline(intercept = 0, slope = beta1, linewidth = 1, colour = "blue", alpha = 1/2)
+  ols<- sum((data$centered_height - beta1 * data$centered_weight)^2)
+  g <- g + ggtitle(paste("slope = ", beta1, "\nSum of Squared Deviations =", round(ols, 3)))
+  g
+}
+
+manipulate(slope.test(beta1, data = temp),
+           beta1 = slider(-1,1, initial = 0, step = 0.005))
+
+m <- lm(height ~ weight, data = d)
+summary(m)
+```
+
+##write some code to calculate beta1 and beta0 by hand
+
+```{r}
+
+beta1 <- cov(d$height, d$weight) / var(d$weight)
+
+beta0 <- mean(d$height) - beta1 * mean(d$weight)
+
+```
+
+want to know more about the model here. is there statistical evidence that. can we estimate out from this if it seems like there is support for your. what is the 
+
+run #summary(m)
+
+minimum residual from here. farthest from the line. the three inner quartile. looked at table of coefficients and the, t statistic and p 
+
+estimate/ standard error = t statistic <- ratio of the mean and standard error of the mean. 
+
+when doing t tests and calculating t statistic, determined how far away from
+
+
+2. comparative primate sexuality
+```{r}
+
+#read in dataset 
+
+f<- "https://raw.githubusercontent.com/difiore/ada-datasets/refs/heads/main/comparative_primate_sexuality_data.csv"
+
+
+d <- read_csv(f, col_names = TRUE)
+
+head(d)
+names(d)
+
+
+```
+
+plot testis size (y axis) in relation to male body size 
+```{r}
+
+plot_testis<- ggplot(data = d, aes(y = log(Combined_testis_mass), x = log(Body_mass_male_mean)))+
+  geom_point(na.rm = TRUE) ##slope is going to be positive
+
+
+temp <- d %>% filter(!is.na(Combined_testis_mass))
+
+beta1 <- cov(log(temp$Body_mass_male_mean), log(temp$Combined_testis_mass))/var(log(temp$Body_mass_male_mean))
+
+m <- lm(log(Combined_testis_mass) ~ log(Body_mass_male_mean), data = d)
+
+summary(m)
+
+names(m)
+m$coefficients
+
+
+glance(m)
+```
+
+#calculating the SE in the regression coefficients by hand..
+
+for each observation of a predicted value of y, want to know how far those predicted values is from the mean value of y
+
+once we have SE we can calculate the T statistics and P values associated with those. 
+
+##alternatives to Ordinary Least Squares regression 
+
+model II regression approaches, a line of best fit is chosen that minimizes in some way the direct and distance of each point to the line of best fit
+
+```{r}
+
+broom::tidy(m)
+plot(x = d$weight, y = d$height)
+abline(coef(m), col = "blue")
+
+install.packages("lmodel2")
+library(lmodel2)
+
+m2 <- lmodel2(log(Combined_testis_mass) ~ log(Body_mass_male_mean),
+              data = d, range.y = "relative", range.x = "relative", nperm = 1000)
+
+
+```
+
+#practice with another dataset
+
+```{r}
+
+f <- "https://raw.githubusercontent.com/difiore/ada-datasets/refs/heads/main/Street_et_al_2017.csv"
+
+ds <- read.csv(f)
+
+head(ds)
+names(ds)
+
+
+
+```
+
+plot brain size(ECV) as a function of social group size, longevity, juvenile per
+
+```{r}
+
+ggplot(data = ds, aes(x=Group_size, y = ECV)) +
+  geom_point(na.rm = TRUE)
+
+ggplot(data = ds, aes(x=Longevity, y = ECV)) +
+  geom_point(na.rm = TRUE)
+
+ggplot(data = ds, aes(x=Sex_maturity, y = ECV)) +
+  geom_point(na.rm = TRUE)
+
+ggplot(data = ds, aes(x=Repro_lifespan, y = ECV)) +
+  geom_point(na.rm = TRUE)
+
+#might want to log transform them 
+
+#calculate beta1
+
+temp <- ds %>% filter(!is.na(Group_size) & !is.na(ECV))
+
+beta1 <- cov(temp$Group_size, temp$ECV)/ var(temp$Group_size)
+
+
+
+```
+

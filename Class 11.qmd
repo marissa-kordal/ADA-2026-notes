@@ -1,0 +1,422 @@
+---
+title: "Class 11"
+format: html
+date: 2-24-26
+---
+
+
+
+```{r}
+
+library(tidyverse)
+## what is a sampling distribution, a means or sampling statistic - the distribution of the sampling statistic 
+
+#a set of possible statistic that could have been generated *if the stat collection process were repeated many time* along with the probabilities of these possible values. 
+
+#estimating the standard error from a single sample 
+
+x <- rnorm(n = 10, mean = 10, sd = 2)
+
+se <- sd(x)/sqrt(length(x))
+
+#drawing a vector of 10 distributions, estimates of standard error 
+
+#what happens to the spread of the sampling distribution, and thus to the SE as the size of our samples increases, 
+
+#as n gets bigger, we are dividing by a larger and larger number so the standard error gets smaller. the more samples we take from observations, the smaller the error. the better the description of the entire population. 
+library(mosaic)
+reps <- 500 ##sampling 500 times from a normal distribution 
+
+samp_dist_mean <- 
+  do(reps) * mean(rnorm(n = 10, mean = 10, sd = 2))
+
+
+glimpse(samp_dist_mean)
+str(samp_dist_mean)
+
+mean(samp_dist_mean$mean)
+histogram(samp_dist_mean$mean)
+histogram(samp_dist_mean$median)
+
+se_mean <- sd(samp_dist_mean$mean)
+
+
+##estimating standard error in a sample...3 ways
+
+#if true population variance if known (rare!)
+#can estimate the expected standard error for the population what would be the expected standard error by taking the SD of the population divided by the sqrt(n)
+
+#if we can sample population repeatedly to generate sampling 
+
+
+#one sample from a random normal dist
+
+s<- rnorm(10, mean = 10, sd = 2)
+
+sd(s)
+
+sd(s)/sqrt(length(s))
+```
+
+
+```{r}
+
+##class 11: Playing with Distributions 
+
+#assume we are sampling a variable that has some unknown distribution from a population...what do we do?
+
+#draw a sample, plot values, calculate summary statistics 
+
+
+#example draw
+
+e<- rnorm(100, mean = 2, sd = 4)
+
+mean(e)
+sd(e)
+se <- sd(e)/sqrt(length(e))
+
+sd(e)/sqrt(length(e))
+
+reps <- 1000
+
+samp_dist_mean_e <- 
+  do(reps) * mean(rnorm(n = 100, mean = 2, sd = 4))
+
+samp_dist_mean_e$mean
+
+se_mean <- sd(samp_dist_mean_e$mean) ##for samples size of 100
+
+##for sample size 1000
+reps <- 1000
+
+samp_dist_mean_e <- 
+  do(reps) * mean(rnorm(n = 1000, mean = 2, sd = 4))
+
+samp_dist_mean_e$mean
+
+se_mean <- sd(samp_dist_mean_e$mean)
+
+## for sample size 20
+
+reps <- 1000
+
+samp_dist_mean_e <- 
+  do(reps) * mean(rnorm(n = 20, mean = 2, sd = 4))
+
+samp_dist_mean_e$mean
+
+se_mean <- sd(samp_dist_mean_e$mean)
+
+##repeat this using a t distribution - a bit more robust to small sample sizes 
+
+plotDist("t", df = 100, xlab="x", ylab = "Frequency", col="red")
+plotDist("t", df = 50, xlab="x", ylab = "Frequency", col="red", add = TRUE)
+plotDist("t", df = 25, xlab="x", ylab = "Frequency", col="red", add = TRUE)
+plotDist("t", df = 12, xlab="x", ylab = "Frequency", col="red", add = TRUE)
+plotDist("t", df = 6, xlab="x", ylab = "Frequency", col="red", add = TRUE)
+plotDist("t", df = 3, xlab="x", ylab = "Frequency", col="red", add = TRUE)
+
+
+##repeat this exercise using a t distribution
+
+#draw 100 random numbers from a t distribution with df = 99 (n-1) and ncp = 2
+
+reps <- 1000
+
+x<-do(reps) * mean(rt(n = 100, df = 99, ncp =2))
+
+histogram(~mean, data = x)
+
+##beta distributions 
+
+plotDist("beta", shape1 = 2, shape2= 4, xlab="x", xlim = c(0,1), ylab = "Frequency", col = "red")
+
+plotDist("beta", shape1 = 0.5, shape2= 0.5, xlab="x", xlim = c(0,1), ylab = "Frequency", col = "red", add = TRUE)
+
+plotDist("beta", shape1 = 0.5, shape2= 2, xlab="x", xlim = c(0,1), ylab = "Frequency", col = "red", add = TRUE)
+
+plotDist("beta", shape1 = 4, shape2= 2, xlab="x", xlim = c(0,1), ylab = "Frequency", col = "red", add = TRUE)
+
+
+reps <- 100
+
+x<-do(reps) * mean(rbeta(n = 100, shape1 = 0.3, shape2 = 4))
+
+mean(x)
+sd(x$mean)
+
+histogram(~mean, data = x)
+
+#key function for distributions 
+
+r_(n = ) #draws random samples from size n from a given distribution 
+
+p_(q = ) #returns the the quantile associated with a given value of X
+
+q_(p = ) #returns the value of X at a given quantile through the distribution, ie returns the value of the inverse cumulative densty function (cdf)
+
+pnorm(q=0, mean = 0, sd = 1) ##[1] 0.5
+
+##understanding how likely or the probability of observing a samples given the distribution in my population 
+
+qnorm(p = c(0.025, 0.975), mean = 0, sd = 1)
+
+lower<- qbeta(0.025, shape1 = 2, shape2 = 4)
+upper<- qbeta(0.975, shape1 = 2, shape2 = 4)
+curve(dbeta(x, shape1 = 2, shape2 = 4),
+      from = 0, to = 1, lwd = 2)
+
+x<- seq(lower, upper, length = 500)
+
+polygon(c(lower, x, upper),
+        c(0, dbeta(x, shape1 = 2, shape2 = 4), 0), col = "lightblue")
+
+abline(v = c(lower, upper), col = "red", lwd = 2)
+
+```
+```{r}
+
+##class 12 - CONFIDENCE INTERVALS
+
+#q_() function to get the value of X associated with 
+
+#confidence intervals the SE can be used to derive another measure of uncertainty in a statistic's value: the CI
+
+#the CI is thus another way of describing a statistic;s sampling distribution and it plays a central roles in basic inferential statistics.
+
+#an interval around our estimate of mean of the sampling distribution for a particular statistic and it gives us a range of values into which subsequent estimates of a statistic would be expected to fall some critical proportion of the time, if the sampling exercise were to be repeated. 
+
+#higher confidence is associated with a wider interval. 
+
+# 95% CI 
+
+#calculating CIs 
+
+#the value of the statistic +- critical value x the standard error of the statistic 
+#for example: the mean +_ critical value x SE of the mean
+
+#an example 
+
+#what is the theoretical 95% CI around the estimate of the mean of the following vector:
+
+x <- c(2.9, 4.8, 8.9, -3.2, 9.1, -2.5, -0.9, -0.1, 2.8, -1.7)
+
+(m <-mean(x))
+(se <- sd(x)/sqrt(length(x)))
+
+
+(ci <- m + qnorm(c(0.025, 0.975))* se)
+
+#or
+
+(ci <- m + c(-1,1)* qnorm(0.975)*se) ##might see this in someone else R code
+
+
+percent_ci<- 0.95
+
+alpha <- 1 - percent_ci
+ci<- m + qnorm(c(alpha/2, (1 - (alpha/2))))
+
+
+##central limit theorem 
+
+#the sampling distribution of averages of "independent and identically distributed" reandom variables approaches a normal distribution as sample size increases
+
+#the probability of a particular event 
+
+#doesnt say anything about distribution in the original, summary statistics based on that should be normally distributed. 
+
+#regardless of the IID
+
+##CI for small sample sizes, use a t-distribution, has fatter tails at smaller 
+
+
+##for a small population
+
+#mean +_ T (critical values based on quantiles from a t distribution) x SE
+
+#mean(x)+qt(c(0.025, 0.975), df = length (x) -1) * sd(x)/sqrt
+
+
+##calculating CIs by Bootstrapping 
+
+##better way to calculate CIs, defining what the critical values are, assuming that our data has a normal distribution, by resampling from our sample a bunch of time. 
+
+#monte carlo simulation process 
+#bootstrapping allows us to approximate a sampling distribution event without access to the population from which samples are drawn and without making any assumptions about theoretical shape of the samp dist. 
+
+#sample 10 observations out of that vector, resampling lenght of vector with replacement and do that over and over and over again, get an 
+
+#calcualte our statistics of interest form each resample, and then use this set of calculated statistics as a sampling distribution 
+
+#we then use the quantile function to define the CI based on 
+
+
+#example 
+
+n_boot <- 10000
+boot <- vector()
+n<- length(x)
+for (i in 1:n_boot) {
+  boot[[i]] <- mean(sample(x, n, replace = TRUE))
+}
+ci_boot <- quantile(boot, probs = c(0.025,0.975))
+
+boot<- do(n_boot) * mean(sample(x, n, replace = TRUE))
+
+histogram(boot$mean)
+
+##estimating confidence intervals (redux)
+
+#qnorm()
+#ci <- popmean + qnorm(c(0.025, 0.975)) * popSD/sqrt
+
+
+
+```
+
+```{r}
+
+##null hypothesis significance testing 
+#classical hypothesis testing
+#if we fail to falsify a 
+
+#what is signficant is arbitrary, need a low chance of falsifying the null hypothesis. 
+
+#usually .05
+
+#interpreted as the claim that is assumed to be true but 
+
+#the null hypothesis is interpreted as a baseline hypothesis and is the claim that is presumd to be true. 
+#the alternative hypothesis is the conjecture that we are testing, usually that the sample statistic is inconsistent with a null expectation. 
+
+#when doing a significance test, how far apart do they have to be to call it significant. is it different statistically. 
+
+##typically presensted as a null hyp and alternative hyp. deviated more than expected by chance. 
+
+
+#impliment a hypothesis test 
+  #calculate a test statistic based on our data 
+  #calculate the p value associated with that test statistic, which is the probability of obtaining, by chance, a test statisitic that is as high or hight than our calculate one
+
+##example from module 15: one sample T test 
+
+f <- "https://raw.githubusercontent.com/difiore/ada-datasets/main/woolly-weights.csv"
+d <- read_csv(f, col_names = TRUE)
+
+x <- d$weight
+n <- length(x)
+(m <- mean(x))
+
+(s <- sd(x))
+
+(se <- s/sqrt(n))
+
+mu <- 7.2
+t_stat <- (m - mu)/se
+t_stat
+
+p_upper <- 1 - pt(abs(t_stat), df = n - 1)
+# or 1 - pt(t_stat, df=n-1, lower.tail = FALSE)
+p_lower <- pt(-1 * abs(t_stat), df = n - 1)
+# or pt(t_stat, df=n-1, lower.tail = TRUE)
+p <- p_upper + p_lower
+p
+
+ci <- m + qt(p = c(0.025, 0.975),
+             ncp = 0,
+             df = n - 1) *se
+
+ci
+#does this CI include the expected mean? NO
+
+
+```
+
+
+
+
+```{r}
+##class 13 - example from module 15: one sample T test
+
+##what is the probability that we get that extreme of a value, that is the p value.
+#my confidence in the estimate of the mean, doesnt include the expectation. what probability of getting a test statistic far away from the mean. 
+
+#what is the two tailed probability of getting a statistic as far away from the expected value as it is BY CHANCE?
+
+p_lower<- pt(-1*abs(t_stat), df = n-1)
+p_upper<- 1-pt(1*abs(t_stat), df = n-1)
+p<- p_lower+p_upper
+p
+
+##programming Exercise: A two-sample T test
+
+#dataset on home range sizes of individual spider monkeys 
+
+
+x <- "https://raw.githubusercontent.com/difiore/ada-datasets/refs/heads/main/tbs-2006-2008-ranges.csv"
+d <- read_csv(x, col_names = TRUE)
+
+#write code to determine the mean, SD, and SE in "kernel95"
+
+
+d_reduce<-d%>%
+  select(id, sex, kernel95)%>%
+  group_by(sex)%>%
+  summarise(avg = mean(kernel95),
+            sd = sd(kernel95),
+            se = sd/sqrt(nrow(d)))
+
+head(d_reduce)
+
+kernel_mean<-mean(d_reduce$kernel95)
+
+kernel_sd<-sd(d_reduce$kernel95)
+
+kernel_se <- kernel_sd/sqrt(length(d_reduce$kernel95))
+
+library(ggplot2)
+
+boxplot<-ggplot(data = d, aes(x=sex, y=kernel95)) +
+  geom_boxplot()+
+  geom_jitter()+
+  theme_classic()
+
+boxplot
+
+##for each sex, generate a bootstrap distribution for mean kernel95 homerange size. 
+
+
+#create a vector for just males and just females 
+
+males <- d%>%filter(sex == "M")
+females <- d%>%filter(sex == "F")
+
+n_boot <- 10000
+
+boot_males<- do(n_boot) * mean(sample(males$kernel95, nrow(males), replace = TRUE))
+ boot_males<-boot_males%>% 
+  pull(mean) ##generate a table and each column is an average and has the title of mean. pull out that column as a vector
+histogram(boot_males, col = "cyan2")  
+
+plotDist("norm",mean(boot_males),sd(boot_males), add = TRUE, col = "red")
+
+
+ci_boot_m<-quantile(boot_males, probs = c(0.025,0.975))
+
+ci_norm_m<- boot_males + qnorm(c(0.025,0.975))*sd_males
+
+##step 1, use simulation-based permutation to evaluate the difference in mean kernel95 home range size for males versus females. 
+
+t_num <- mean(males$kernel95)-mean(females$kernel95)-0
+
+t_denom <- sqrt(var(males$kernel95)/nrow(males)+var(females$kernel95)/nrow(females))
+
+(t<-t_num/t_denom)
+
+
+##then divide the numerator by the denominator
+```
+
+

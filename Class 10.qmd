@@ -1,0 +1,161 @@
+---
+title: "Class 10, Part 2 of the class"
+format: html
+date: 2-17-26
+---
+
+
+
+```{r}
+
+## start going through module 12 and 13 
+#statistic and statistical inference 
+
+##population versus a sample - population all of it, use the sample, a set of observations on a population and hope that it is representative of the population.
+##any sample is an imperfect representation of the population, hoping to control for the biases 
+
+
+##parameter versus statistic, a parameter is a measurable characteristic of a population that summarizes the population, while a statistic is a measurable characteristic of a sample that summarizes the sample data.
+
+#measures of location, spread and shape, the eveness or peakenis our distribution is. 
+
+#mostly talking about numerical data, but if you are dealing with categorical variables, central tendency commoness 
+
+#key stastistics that describe the data 
+# - mean (average)
+# - median - the central point, the observation that is in the middle. the 50th quartile once organized
+# - mode - the most common observation in a data set
+# - harmonic mean - not very commonly used, take the average of the inverse so samples 1,2,3 and take the average of 1/1, 1/2, 1/3
+
+#spread
+# mean deviation (avg of abs values of deviation from median) so a set of numbers that, some measure of central tendancy take the deviation of each data point from the center take the absolute value and then average them
+# mean squared deviation (avg of squared deviation from mean) = variance
+# standard deviation (square root of variance) put them back in the units of the observations themselves. 
+
+#spread population variance - a parameter = SS/N = 
+                                    #SS = sum of samples
+#sample variance, dividing by the number of observations minus one, corrects for the bias by not sampling everyone. when N is really big the numbers are going to be similar
+
+#population standard deviation = a parameter
+#sample standard deviation = a statistic = S
+
+#SHAPE
+
+#skewness - characterized the asymmetry of the distribution 
+
+#kurtosis - characterizes the peakedness or flatness of a distribution (compared to normal)
+
+#challenge 
+#write three functions 
+
+
+install.packages("mosaic")
+install.packages("radiant")
+install.packages("moments")
+
+library(mosaic)
+library(radiant)
+library(moments)
+
+
+x <- c(1,2,3,4,5)
+pop.variance <- function(x) {
+  sum((x-mean(x))^2)/
+    length(x)
+}
+
+pop.variance(x)
+
+skew <- function(x) {
+  (x-mean(x))sd(x))/length(x-1)
+}
+
+skew <- function(x) {
+sum(((x-mean(x))/sd(x))^3)/(length(x)-1)
+}
+
+skew(x)
+
+##moments package has a function for skewness 
+
+#key ideas classical or frequentist are part of well defined mathematical distribution where it's centered or where it
+
+#draw a sample of observations from a theoretical mathematical distributions 
+
+mu <- 10 # for "mean" parameter
+sigma <- 2
+
+plotDist("norm", mean = mu, sd=sigma, xlab = "x", ylab = "Frequency")
+
+##draw some number out of this distribution, more of them will be around the mean because there are more observations that 
+
+s1 <- rnorm(n = 10, mean = 10, sd = 2)
+histogram(s1)
+mean(s1)
+sd(s1)
+
+s2 <- rnorm(n = 100000, mean = 10, sd = 2)
+histogram(s2)
+mean(s2)
+sd(s2)
+
+skewness(s1)
+
+skewness(s2)
+kurtosis(s2)
+
+df1<- 5
+df2 <- 20
+
+plotDist("f",
+         df1= df1, df2 = df2,
+         xlab = "x", ylab = "Frequency")
+
+s <- rf(n = 10000, df1 = 5, df2 = 20)
+
+histogram(s)
+mean(s)
+sd(s)
+
+skewness(s)
+kurtosis(s)
+
+##beta distribution
+
+shape1 = 5
+shape2 = 3
+plotDist("beta",
+         shape1 = shape1, shape2 = shape2)
+
+s <- rbeta(n=100000, )
+
+
+
+###sampling distribution of a statistic, if we were to calculate and take a whole bunch of samples 
+#calculate the mean based on each of those samples 
+
+#each time we do that we can numbers in the sample 
+
+reps <- 100000 ##sampling 500 times from a normal distribution 
+
+samp_dist_mean <- 
+  do(reps) * mean(rnorm(n = 10, mean = 10, sd = 2))
+
+str(samp_dist_mean)
+
+mean(samp_dist_mean$mean)
+histogram(samp_dist_mean$mean)
+
+
+```
+
+You can add options to executable code like this 
+
+```{r}
+
+
+
+
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
